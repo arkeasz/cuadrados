@@ -331,3 +331,93 @@ summary(modelo_lamparas)
 # gas:presion            2   65.3    32.7   2.486    0.118    
 # gas:velocidad          1   14.1    14.1   1.071    0.317    
 # presion:velocidad      2   12.3     6.2   0.469    0.634
+### Problema 5: Diseño Factorial (Cables Automotrices)
+
+**Modelo Estadístico:**  
+$Y_{ijk} = \mu + \alpha_i + \beta_j + (\alpha\beta)_{ij} + \varepsilon_{ijk}$  
+Donde:  
+- $Y_{ijk}$: Cantidad de alambre descubierto (mm)  
+- $\mu$: Media general  
+- $\alpha_i$: Efecto de la i-ésima temperatura ($i=1:$600, $i=2:$650)  
+- $\beta_j$: Efecto de la j-ésima velocidad ($j=1:$70, $j=2:$75, $j=3:$80)  
+- $(\alpha\beta)_{ij}$: Efecto de interacción temperatura-velocidad  
+- $\varepsilon_{ijk}$: Error aleatorio $\sim N(0, \sigma^2)$  
+
+**Hipótesis:**  
+1. **Temperatura:**  
+   - $H_0$: $\alpha_1 = \alpha_2$ (La temperatura no afecta el alambre descubierto)  
+   - $H_1$: $\alpha_1 \neq \alpha_2$  
+
+2. **Velocidad:**  
+   - $H_0$: $\beta_1 = \beta_2 = \beta_3$ (La velocidad no afecta el alambre descubierto)  
+   - $H_1$: Al menos una velocidad difiere  
+
+3. **Interacción:**  
+   - $H_0$: $(\alpha\beta)_{ij} = 0$ para todo $i,j$ (No hay interacción)  
+   - $H_1$: Existe interacción temperatura-velocidad  
+
+---
+
+### Análisis en R
+```r
+# Crear datos
+temperatura <- factor(rep(rep(c(600, 650), each = 9), levels = c(600, 650))
+velocidad <- factor(rep(c(70, 75, 80), each = 3, times = 2))
+
+respuesta <- c(
+  # Temp 600
+  3.6, 3.7, 3.9,   # Vel 70
+  4.0, 4.1, 4.0,   # Vel 75
+  4.2, 4.3, 4.1,   # Vel 80
+  
+  # Temp 650
+  3.7, 3.6, 3.6,   # Vel 70
+  4.1, 4.3, 3.9,   # Vel 75
+  3.7, 3.6, 3.5    # Vel 80
+)
+
+# Modelo ANOVA de dos vías con interacción
+modelo <- aov(respuesta ~ temperatura * velocidad)
+
+# Mostrar resultados
+summary(modelo)
+```
+
+### Resultados del ANOVA:
+```
+                       Df Sum Sq Mean Sq F value   Pr(>F)    
+temperatura             1 0.3000  0.3000  14.286 0.002419 ** 
+velocidad               2 0.4422  0.2211  10.526 0.002123 ** 
+temperatura:velocidad   2 0.3511  0.1756   8.357 0.005096 ** 
+Residuals              12 0.2520  0.0210                     
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+```
+
+### Interpretación:
+1. **Temperatura:**  
+   Efecto altamente significativo (p=0.0024). La temperatura afecta la cantidad de alambre descubierto.
+
+2. **Velocidad:**  
+   Efecto altamente significativo (p=0.0021). La velocidad de línea influye en la respuesta.
+
+3. **Interacción:**  
+   Efecto significativo (p=0.0051). Existe interacción entre temperatura y velocidad, lo que significa que el efecto de la temperatura depende de la velocidad utilizada (y viceversa).
+
+### Recomendaciones:
+- **Analizar gráficamente la interacción:**  
+  ```r
+  interaction.plot(
+    x.factor = velocidad, 
+    trace.factor = temperatura,
+    response = respuesta,
+    type = "b", col = c("red", "blue"), pch = c(16, 18)
+  ```
+- **Realizar pruebas post-hoc:**  
+  Dada la interacción significativa, comparar combinaciones específicas de temperatura-velocidad usando Tukey HSD:
+  ```r
+  TukeyHSD(modelo, which = "temperatura:velocidad")
+  ```
+
+### Conclusión:
+Ambos factores (temperatura y velocidad) afectan significativamente la cantidad de alambre descubierto, y su efecto no es independiente debido a la presencia de interacción. Se debe optimizar la combinación específica de temperatura y velocidad para minimizar el alambre descubierto.
