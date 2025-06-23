@@ -121,3 +121,118 @@ Aquí tienes un resumen claro de cada diseño y cómo estructurar su tabla para 
 [5]: https://en.wikipedia.org/wiki/Factorial_experiment?utm_source=chatgpt.com "Factorial experiment"
 [6]: https://es.wikipedia.org/wiki/Dise%C3%B1o_factorial?utm_source=chatgpt.com "Diseño factorial"
 [7]: https://online.stat.psu.edu/stat503/lesson/4/4.3?utm_source=chatgpt.com "4.3 - The Latin Square Design | STAT 503"
+------
+### Problema 1: Efecto de cuatro dietas con bloques de peso inicial  
+**Diseño elegido:** Diseño de bloques completos aleatorizados (un factor - bloque)  
+**Modelo matemático:**  
+\[ Y_{ij} = \mu + \tau_i + \beta_j + \varepsilon_{ij} \]  
+- \(Y_{ij}\): Peso perdido con dieta \(i\) en bloque \(j\)  
+- \(\mu\): Media general  
+- \(\tau_i\): Efecto de la dieta \(i\) (\(i = 1,2,3,4\))  
+- \(\beta_j\): Efecto del bloque \(j\) (\(j = \text{Bajo, Normal, Sobrepeso, Obesidad}\))  
+- \(\varepsilon_{ij}\): Error aleatorio \(\sim N(0, \sigma^2)\)  
+
+**Hipótesis:**  
+- \(H_0\): \(\tau_1 = \tau_2 = \tau_3 = \tau_4\) (no hay diferencia entre dietas)  
+- \(H_1\): Al menos una dieta difiere  
+
+**Análisis en R:**
+```r
+# Datos
+dietas <- data.frame(
+  peso_perdido = c(2.4, 2.2, 3.3, 1.6, 2.2, 1.9, 1.3, 2.5, 3.4, 1.7, 2.8, 1.4, 1.6, 2.1, 2.1, 2.4),
+  dieta = factor(rep(1:4, times = 4)),
+  bloque = factor(rep(c("Bajo", "Normal", "Sobrepeso", "Obesidad"), each = 4))
+)
+
+# Modelo ANOVA
+modelo_dietas <- aov(peso_perdido ~ dieta + bloque, data = dietas)
+summary(modelo_dietas)
+
+# Verificación de supuestos
+par(mfrow = c(1,2))
+plot(modelo_dietas, which = 1:2)
+```
+
+---
+
+### Problema 2: Sistemas de medición con inspectores  
+**a) Diseño:**  
+- Se debe usar **diseño de bloques** donde los bloques son los inspectores (variable de bloqueo: habilidad visual del inspector).  
+
+**b) Número de inspectores:**  
+- Mínimo: 3 inspectores (cada uno mide los 3 sistemas una vez).  
+- Puede haber más de 3 inspectores (aumenta precisión).  
+
+**c) Análisis en R:**  
+**Modelo matemático:**  
+\[ Y_{ij} = \mu + \tau_i + \beta_j + \varepsilon_{ij} \]  
+- \(Y_{ij}\): Medición del sistema \(i\) por inspector \(j\)  
+- \(\tau_i\): Efecto del sistema \(i\) (\(i = 1,2,3\))  
+- \(\beta_j\): Efecto del inspector \(j\) (\(j = 1,2,3\))  
+
+**Hipótesis:**  
+- \(H_0\): \(\tau_1 = \tau_2 = \tau_3\) (no diferencia entre sistemas)  
+- \(H_1\): Al menos un sistema difiere  
+
+```r
+# Datos (ignorar orden de pruebas)
+sistemas <- data.frame(
+  medicion = c(5.8, 8.3, 9.4, 5.4, 5.4, 7.3, 4.2, 6.6, 6.1),
+  sistema = factor(rep(1:3, times = 3)),
+  inspector = factor(rep(1:3, each = 3))
+)
+
+# ANOVA
+modelo_sistemas <- aov(medicion ~ sistema + inspector, data = sistemas)
+summary(modelo_sistemas)
+
+# Prueba de supuestos
+library(car)
+# Homocedasticidad
+leveneTest(medicion ~ sistema, data = sistemas)
+# Normalidad
+shapiro.test(residuals(modelo_sistemas))
+```
+
+---
+
+### Problema 3: Catalizadores con diseño cuadrado latino  
+**Diseño:** Cuadrado latino (controla dos fuentes de variación: lotes y días)  
+**Modelo matemático:**  
+\[ Y_{ijk} = \mu + \tau_i + \beta_j + \gamma_k + \varepsilon_{ijk} \]  
+- \(Y_{ijk}\): Tiempo de reacción con catalizador \(i\) en lote \(j\) y día \(k\)  
+- \(\tau_i\): Efecto del catalizador \(i\) (\(i = A,B,C,D,E\))  
+- \(\beta_j\): Efecto del lote \(j\) (\(j = 1,2,3,4,5\))  
+- \(\gamma_k\): Efecto del día \(k\) (\(k = 1,2,3,4,5\))  
+
+**Hipótesis:**  
+- \(H_0\): \(\tau_A = \tau_B = \tau_C = \tau_D = \tau_E\)  
+- \(H_1\): Al menos un catalizador difiere  
+
+**Análisis en R (ejemplo con datos ficticios):**  
+*(Nota: Los datos del problema están incompletos; se requiere tabla completa 5x5)*  
+```r
+# Ejemplo de estructura (completar con datos reales)
+datos <- data.frame(
+  dia = factor(rep(1:5, each = 5)),
+  lote = factor(rep(1:5, times = 5)),
+  catalizador = factor(c("A", "B", "D", "C", "E", ...)), # Completar secuencia
+  tiempo = c(8, 7, 1, 7, 3, ...) # Completar con todos los datos
+)
+
+# ANOVA
+modelo_latino <- aov(tiempo ~ catalizador + dia + lote, data = datos)
+summary(modelo_latino)
+```
+
+---
+
+### Resumen ejecutivo:
+1. **Problema 1:** ANOVA de bloques (dietas + peso inicial).  
+2. **Problema 2:** ANOVA de bloques (sistemas + inspectores) con prueba de supuestos.  
+3. **Problema 3:** ANOVA de cuadrado latino (catalizadores + días + lotes).  
+
+**Recomendaciones:**  
+- Verificar supuestos (normalidad, homocedasticidad) en todos los modelos.  
+- Para el problema 3, completar la matriz de datos según el cuadrado latino proporcionado.
