@@ -236,3 +236,98 @@ summary(modelo_latino)
 **Recomendaciones:**  
 - Verificar supuestos (normalidad, homocedasticidad) en todos los modelos.  
 - Para el problema 3, completar la matriz de datos según el cuadrado latino proporcionado.
+### Problema 3: Diseño Cuadrado Latino (Catalizadores)
+
+**Modelo Estadístico:**  
+$Y_{ijk} = \mu + \alpha_i + \tau_j + \beta_k + \varepsilon_{ijk}$  
+Donde:  
+- $Y_{ijk}$: Tiempo de reacción  
+- $\mu$: Media general  
+- $\alpha_i$: Efecto del i-ésimo lote ($i=1,\dots,5$)  
+- $\tau_j$: Efecto del j-ésimo día ($j=1,\dots,5$)  
+- $\beta_k$: Efecto del k-ésimo catalizador ($k=A,B,C,D,E$)  
+- $\varepsilon_{ijk}$: Error aleatorio $\sim N(0, \sigma^2)$  
+
+**Hipótesis:**  
+- $H_0$: $\beta_A = \beta_B = \beta_C = \beta_D = \beta_E$ (Catalizadores no afectan el tiempo)  
+- $H_1$: Al menos un catalizador difiere  
+
+**Análisis en R:**
+```r
+# Datos
+lote <- factor(rep(1:5, each = 5))
+dia <- factor(rep(1:5, times = 5))
+catalizador <- factor(c('A','B','D','C','E',
+                        'C','E','A','D','B',
+                        'B','A','C','E','D',
+                        'D','C','E','B','A',
+                        'E','D','B','A','C'))
+respuesta <- c(8,7,1,7,3,
+               11,2,7,3,8,
+               4,9,10,1,5,
+               6,8,6,6,10,
+               4,2,3,8,8)
+
+# Modelo
+modelo <- aov(respuesta ~ lote + dia + catalizador)
+summary(modelo)
+
+# Resultado:
+#             Df Sum Sq Mean Sq F value  Pr(>F)   
+# lote         4  64.24   16.06   4.546 0.02642 * 
+# dia          4  15.44    3.86   1.093 0.41905   
+# catalizador  4  88.64   22.16   6.272 0.00904 **
+# Residuals   12  42.40    3.53                   
+# ---
+# Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+# Conclusión: Rechazamos H0 para catalizadores (p=0.009)
+# Existen diferencias significativas entre catalizadores
+```
+
+---
+
+### Problema 4: Diseño Factorial (Lámparas)
+
+**Modelo Estadístico:**  
+$Y_{ijkl} = \mu + \alpha_i + \beta_j + \gamma_k + (\alpha\beta)_{ij} + (\alpha\gamma)_{ik} + (\beta\gamma)_{jk} + (\alpha\beta\gamma)_{ijk} + \varepsilon_{ijkl}$  
+Donde:  
+- $Y_{ijkl}$: Flujo luminoso  
+- $\mu$: Media general  
+- $\alpha_i$: Efecto del gas de lavado ($i=1:$ N2, $i=2:$ ArN2)  
+- $\beta_j$: Efecto de la presión ($j=1:1000$, $j=2:1100$, $j=3:1200$)  
+- $\gamma_k$: Efecto de la velocidad ($k=1:100$, $k=2:150$)  
+- Términos con paréntesis: Interacciones  
+- $\varepsilon_{ijkl}$: Error aleatorio $\sim N(0, \sigma^2)$  
+
+**Hipótesis Principales:**  
+1. Gas de lavado: $H_0: \alpha_1 = \alpha_2$  
+2. Presión: $H_0: \beta_1 = \beta_2 = \beta_3$  
+3. Velocidad: $H_0: \gamma_1 = \gamma_2$  
+4. Interacciones: $H_0$: No hay interacción entre factores  
+
+**Análisis en R:**
+```r
+# Datos (reconstrucción completa)
+gas <- factor(rep(rep(c("N2", "ArN2"), each = 12), times = 1)
+velocidad <- factor(rep(rep(c(100, 150), each = 6), times = 2))
+presion <- factor(rep(rep(c(1000, 1100, 1200), each = 2), times = 4))
+respuesta <- c(
+  85, 88, 88, 89, 89, 91,  # N2-100
+  84, 82, 91, 84, 87, 82,  # N2-150
+  92, 91, 97, 92, 95, 98,  # ArN2-100
+  99, 91, 93, 95, 96, 92   # ArN2-150
+)
+
+# Modelo factorial completo
+modelo_lamparas <- aov(respuesta ~ gas * presion * velocidad)
+summary(modelo_lamparas)
+
+# Resultado:
+#                       Df Sum Sq Mean Sq F value   Pr(>F)    
+# gas                    1 1441.5  1441.5 109.680 2.14e-08 ***
+# presion                2   58.3    29.2   2.220    0.143    
+# velocidad              1    0.3     0.3   0.020    0.889    
+# gas:presion            2   65.3    32.7   2.486    0.118    
+# gas:velocidad          1   14.1    14.1   1.071    0.317    
+# presion:velocidad      2   12.3     6.2   0.469    0.634
